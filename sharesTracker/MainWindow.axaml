@@ -1,549 +1,177 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d"
-        d:DesignWidth="1440"
-        d:DesignHeight="900"
         x:Class="sharesTracker.MainWindow"
         Title="Riddy Tracker"
+        Width="1200"
+        Height="750"
+        MinWidth="900"
+        MinHeight="600"
         Background="#1E1E1E">
 
-	<Window.Styles>
+	<Grid RowDefinitions="60,*,30">
 
-		<!-- ================================================= -->
-		<!-- ONE DARK PRO THEME                                -->
-		<!-- ================================================= -->
-
-		<Style Selector="TextBlock">
-			<Setter Property="FontFamily" Value="Cascadia Mono"/>
-			<Setter Property="Foreground" Value="#D4D4D4"/>
-			<Setter Property="FontSize" Value="13"/>
-		</Style>
-
-		<Style Selector="TextBlock.muted">
-			<Setter Property="Foreground" Value="#808080"/>
-		</Style>
-
-		<Style Selector="TextBlock.title">
-			<Setter Property="Foreground" Value="#FFFFFF"/>
-			<Setter Property="FontSize" Value="15"/>
-			<Setter Property="FontWeight" Value="Bold"/>
-		</Style>
-
-		<Style Selector="TextBlock.green">
-			<Setter Property="Foreground" Value="#B5CEA8"/>
-		</Style>
-
-		<Style Selector="TextBlock.red">
-			<Setter Property="Foreground" Value="#F44747"/>
-		</Style>
-
-		<Style Selector="TextBlock.blue">
-			<Setter Property="Foreground" Value="#569CD6"/>
-		</Style>
-
-		<Style Selector="TextBlock.orange">
-			<Setter Property="Foreground" Value="#CE9178"/>
-		</Style>
-
-		<Style Selector="TextBlock.yellow">
-			<Setter Property="Foreground" Value="#DCDCAA"/>
-		</Style>
-
-		<Style Selector="Border.panel">
-			<Setter Property="Background" Value="#252526"/>
-			<Setter Property="BorderBrush" Value="#3E3E42"/>
-			<Setter Property="BorderThickness" Value="1"/>
-		</Style>
-
-		<Style Selector="Border.panelHeader">
-			<Setter Property="Background" Value="#2D2D30"/>
-			<Setter Property="BorderBrush" Value="#3E3E42"/>
-			<Setter Property="BorderThickness" Value="0,0,0,1"/>
-		</Style>
-
-		<Style Selector="Button">
-			<Setter Property="Background" Value="#252526"/>
-			<Setter Property="Foreground" Value="#D4D4D4"/>
-			<Setter Property="BorderBrush" Value="#3E3E42"/>
-			<Setter Property="BorderThickness" Value="1"/>
-			<Setter Property="Padding" Value="10,5"/>
-			<Setter Property="FontFamily" Value="Cascadia Mono"/>
-		</Style>
-
-		<Style Selector="Button:pointerover">
-			<Setter Property="Background" Value="#37373D"/>
-			<Setter Property="Foreground" Value="#FFFFFF"/>
-		</Style>
-
-		<Style Selector="Button.marketSelected">
-			<Setter Property="Background" Value="#094771"/>
-			<Setter Property="Foreground" Value="#FFFFFF"/>
-			<Setter Property="BorderBrush" Value="#007ACC"/>
-		</Style>
-
-		<Style Selector="TextBox">
-			<Setter Property="Background" Value="#1E1E1E"/>
-			<Setter Property="Foreground" Value="#FFFFFF"/>
-			<Setter Property="BorderBrush" Value="#3E3E42"/>
-			<Setter Property="BorderThickness" Value="1"/>
-			<Setter Property="FontFamily" Value="Cascadia Mono"/>
-			<Setter Property="Padding" Value="8,6"/>
-		</Style>
-
-	</Window.Styles>
-
-
-	<!-- ===================================================== -->
-	<!-- ROOT                                                   -->
-	<!-- ===================================================== -->
-
-	<Grid RowDefinitions="38,46,*,25"
-          Background="#1E1E1E">
-
-
-		<!-- ================================================= -->
-		<!-- TOP APPLICATION BAR                               -->
-		<!-- ================================================= -->
+		<!-- ========================= -->
+		<!-- TOP BAR -->
+		<!-- ========================= -->
 
 		<Border Grid.Row="0"
-                Background="#181818"
+                Background="#252526"
                 BorderBrush="#3E3E42"
                 BorderThickness="0,0,0,1">
 
-			<Grid ColumnDefinitions="Auto,*,Auto,Auto">
+			<Grid ColumnDefinitions="220,*,120">
 
-				<TextBlock Text="RIDDY TRACKER"
-                           Foreground="#FFFFFF"
+				<TextBlock Grid.Column="0"
+                           Text="RIDDY TRACKER"
+                           VerticalAlignment="Center"
+                           Margin="20,0"
+                           FontSize="20"
                            FontWeight="Bold"
-                           FontSize="15"
-                           VerticalAlignment="Center"
-                           Margin="12,0"/>
-
-				<TextBlock Grid.Column="1"
-                           Text="MARKET INTELLIGENCE"
-                           Classes="muted"
-                           VerticalAlignment="Center"
-                           Margin="20,0"/>
-
-				<TextBlock Grid.Column="2"
-                           Text="● LIVE"
-                           Classes="green"
-                           FontWeight="Bold"
-                           VerticalAlignment="Center"
-                           Margin="15,0"/>
-
-				<TextBlock Grid.Column="3"
-                           Text="21:55:18"
-                           Classes="muted"
-                           VerticalAlignment="Center"
-                           Margin="15,0,12,0"/>
-
-			</Grid>
-
-		</Border>
-
-
-		<!-- ================================================= -->
-		<!-- SEARCH / MARKET SELECTOR                          -->
-		<!-- ================================================= -->
-
-		<Border Grid.Row="1"
-                Background="#252526"
-                BorderBrush="#3E3E42"
-                BorderThickness="0,0,0,1"
-                Padding="8">
-
-			<Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto">
-
-				<TextBlock Text="SEARCH"
-                           Classes="yellow"
-                           FontWeight="Bold"
-                           VerticalAlignment="Center"
-                           Margin="5,0,12,0"/>
+                           Foreground="#DCDCAA"/>
 
 				<TextBox Grid.Column="1"
-                         Watermark="Search ticker, company or ask for current information..."
+                         x:Name="SearchBox"
+                         Watermark="Enter stock symbol e.g. AAPL"
+                         Margin="10"
+                         Height="36"
                          VerticalAlignment="Center"
-                         Height="32"/>
+                         Background="#1E1E1E"
+                         Foreground="#D4D4D4"
+                         BorderBrush="#3E3E42"/>
 
 				<Button Grid.Column="2"
                         Content="SEARCH"
-                        Margin="8,0,4,0"/>
-
-				<Button Grid.Column="3"
-                        Content="NASDAQ"
-                        Classes="marketSelected"
-                        Margin="4,0"/>
-
-				<Button Grid.Column="4"
-                        Content="NYSE"
-                        Margin="4,0"/>
-
-				<Button Grid.Column="5"
-                        Content="LSE"
-                        Margin="4,0"/>
-
-				<Button Grid.Column="6"
-                        Content="GLOBAL"
-                        Margin="4,0"/>
+                        Click="Search_Click"
+                        Margin="10"
+                        Height="36"
+                        VerticalAlignment="Center"
+                        Background="#569CD6"
+                        Foreground="White"
+                        BorderThickness="0"/>
 
 			</Grid>
 
 		</Border>
 
 
-		<!-- ================================================= -->
-		<!-- MAIN TERMINAL                                     -->
-		<!-- ================================================= -->
+		<!-- ========================= -->
+		<!-- MAIN CONTENT -->
+		<!-- ========================= -->
 
-		<Grid Grid.Row="2"
-              Margin="5"
-              ColumnDefinitions="270,*,330"
-              RowDefinitions="*,270">
+		<Grid Grid.Row="1"
+              ColumnDefinitions="240,*,280">
 
 
-			<!-- ================================================= -->
-			<!-- TOP 50                                             -->
-			<!-- ================================================= -->
+			<!-- ========================= -->
+			<!-- WATCHLIST -->
+			<!-- ========================= -->
 
-			<Border Grid.Row="0"
-                    Grid.Column="0"
-                    Grid.RowSpan="2"
-                    Classes="panel"
-                    Margin="0,0,5,0">
+			<Border Grid.Column="0"
+                    Margin="10"
+                    Background="#252526"
+                    BorderBrush="#3E3E42"
+                    BorderThickness="1">
 
-				<Grid RowDefinitions="36,*">
+				<Grid RowDefinitions="50,*">
 
-					<Border Grid.Row="0"
-                            Classes="panelHeader">
-
-						<Grid ColumnDefinitions="*,Auto">
-
-							<TextBlock Text="TOP 50"
-                                       Classes="title"
-                                       VerticalAlignment="Center"
-                                       Margin="10,0"/>
-
-							<TextBlock Text="NASDAQ"
-                                       Classes="blue"
-                                       VerticalAlignment="Center"
-                                       Margin="10,0"/>
-
-						</Grid>
-
-					</Border>
+					<TextBlock Grid.Row="0"
+                               Text="WATCHLIST"
+                               Margin="15,0"
+                               VerticalAlignment="Center"
+                               FontSize="16"
+                               FontWeight="Bold"
+                               Foreground="#D4D4D4"/>
 
 
-					<!-- Stock list -->
-					<ScrollViewer Grid.Row="1"
-                                  VerticalScrollBarVisibility="Auto">
+					<ListBox Grid.Row="1"
+                             x:Name="StocksList"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             SelectionChanged="Stock_Selected">
 
-						<StackPanel>
+						<ListBoxItem Content="AAPL"/>
 
-							<!-- 1 -->
-							<Grid ColumnDefinitions="34,*,Auto,Auto"
-                                  Margin="8,7">
+						<ListBoxItem Content="MSFT"/>
 
-								<TextBlock Text="01"
-                                           Classes="muted"/>
+						<ListBoxItem Content="NVDA"/>
 
-								<StackPanel Grid.Column="1">
-									<TextBlock Text="NVDA"
-                                               Classes="title"
-                                               FontSize="13"/>
-									<TextBlock Text="NVIDIA"
-                                               Classes="muted"
-                                               FontSize="10"/>
-								</StackPanel>
+						<ListBoxItem Content="AMZN"/>
 
-								<TextBlock Grid.Column="2"
-                                           Text="$224.41"
-                                           Margin="8,0"/>
+						<ListBoxItem Content="GOOGL"/>
 
-								<TextBlock Grid.Column="3"
-                                           Text="+3.21%"
-                                           Classes="green"
-                                           Margin="8,0,3,0"/>
-							</Grid>
+						<ListBoxItem Content="META"/>
 
+						<ListBoxItem Content="TSLA"/>
 
-							<!-- 2 -->
-							<Grid ColumnDefinitions="34,*,Auto,Auto"
-                                  Margin="8,7">
+						<ListBoxItem Content="AVGO"/>
 
-								<TextBlock Text="02"
-                                           Classes="muted"/>
+						<ListBoxItem Content="NFLX"/>
 
-								<StackPanel Grid.Column="1">
-									<TextBlock Text="AAPL"
-                                               Classes="title"
-                                               FontSize="13"/>
-									<TextBlock Text="Apple"
-                                               Classes="muted"
-                                               FontSize="10"/>
-								</StackPanel>
+						<ListBoxItem Content="AMD"/>
 
-								<TextBlock Grid.Column="2"
-                                           Text="$324.96"
-                                           Margin="8,0"/>
-
-								<TextBlock Grid.Column="3"
-                                           Text="-0.05%"
-                                           Classes="red"
-                                           Margin="8,0,3,0"/>
-							</Grid>
-
-
-							<!-- 3 -->
-							<Grid ColumnDefinitions="34,*,Auto,Auto"
-                                  Margin="8,7">
-
-								<TextBlock Text="03"
-                                           Classes="muted"/>
-
-								<StackPanel Grid.Column="1">
-									<TextBlock Text="GOOGL"
-                                               Classes="title"
-                                               FontSize="13"/>
-									<TextBlock Text="Alphabet"
-                                               Classes="muted"
-                                               FontSize="10"/>
-								</StackPanel>
-
-								<TextBlock Grid.Column="2"
-                                           Text="$337.12"
-                                           Margin="8,0"/>
-
-								<TextBlock Grid.Column="3"
-                                           Text="+0.63%"
-                                           Classes="green"
-                                           Margin="8,0,3,0"/>
-							</Grid>
-
-
-							<!-- 4 -->
-							<Grid ColumnDefinitions="34,*,Auto,Auto"
-                                  Margin="8,7">
-
-								<TextBlock Text="04"
-                                           Classes="muted"/>
-
-								<StackPanel Grid.Column="1">
-									<TextBlock Text="MSFT"
-                                               Classes="title"
-                                               FontSize="13"/>
-									<TextBlock Text="Microsoft"
-                                               Classes="muted"
-                                               FontSize="10"/>
-								</StackPanel>
-
-								<TextBlock Grid.Column="2"
-                                           Text="$496.82"
-                                           Margin="8,0"/>
-
-								<TextBlock Grid.Column="3"
-                                           Text="-0.84%"
-                                           Classes="red"
-                                           Margin="8,0,3,0"/>
-							</Grid>
-
-
-							<!-- 5 -->
-							<Grid ColumnDefinitions="34,*,Auto,Auto"
-                                  Margin="8,7">
-
-								<TextBlock Text="05"
-                                           Classes="muted"/>
-
-								<StackPanel Grid.Column="1">
-									<TextBlock Text="AMZN"
-                                               Classes="title"
-                                               FontSize="13"/>
-									<TextBlock Text="Amazon"
-                                               Classes="muted"
-                                               FontSize="10"/>
-								</StackPanel>
-
-								<TextBlock Grid.Column="2"
-                                           Text="$254.98"
-                                           Margin="8,0"/>
-
-								<TextBlock Grid.Column="3"
-                                           Text="+0.02%"
-                                           Classes="green"
-                                           Margin="8,0,3,0"/>
-							</Grid>
-
-
-							<!-- Remaining rows are populated dynamically -->
-							<TextBlock Text="..."
-                                       Classes="muted"
-                                       HorizontalAlignment="Center"
-                                       Margin="0,10"/>
-
-							<TextBlock Text="06 — 50 loaded from market data API"
-                                       Classes="muted"
-                                       HorizontalAlignment="Center"
-                                       Margin="0,5"/>
-
-						</StackPanel>
-
-					</ScrollViewer>
+					</ListBox>
 
 				</Grid>
 
 			</Border>
 
 
-			<!-- ================================================= -->
-			<!-- MAIN GRAPH                                         -->
-			<!-- ================================================= -->
+			<!-- ========================= -->
+			<!-- STOCK GRAPH -->
+			<!-- ========================= -->
 
-			<Border Grid.Row="0"
-                    Grid.Column="1"
-                    Classes="panel"
-                    Margin="0,0,5,5">
+			<Border Grid.Column="1"
+                    Margin="0,10,10,10"
+                    Background="#252526"
+                    BorderBrush="#3E3E42"
+                    BorderThickness="1">
 
-				<Grid RowDefinitions="70,*">
+				<Grid RowDefinitions="80,*">
 
-					<!-- Stock header -->
+					<!-- STOCK HEADER -->
 
 					<Grid Grid.Row="0"
-                          Margin="12"
-                          ColumnDefinitions="*,Auto">
+                          ColumnDefinitions="*,150">
 
-						<StackPanel>
+						<StackPanel Margin="15,10">
 
-							<TextBlock Text="NVIDIA CORPORATION"
-                                       Classes="muted"/>
-
-							<StackPanel Orientation="Horizontal">
-
-								<TextBlock Text="NVDA"
-                                           Classes="title"
-                                           FontSize="19"/>
-
-								<TextBlock Text="  NASDAQ"
-                                           Classes="blue"
-                                           VerticalAlignment="Center"/>
-
-							</StackPanel>
-
-						</StackPanel>
-
-
-						<StackPanel Grid.Column="1"
-                                    HorizontalAlignment="Right">
-
-							<TextBlock Text="$224.41"
-                                       Foreground="#FFFFFF"
-                                       FontSize="26"
+							<TextBlock x:Name="StockSymbol"
+                                       Text="AAPL"
+                                       FontSize="24"
                                        FontWeight="Bold"
-                                       HorizontalAlignment="Right"/>
+                                       Foreground="#D4D4D4"/>
 
-							<TextBlock Text="+6.98  +3.21%"
-                                       Classes="green"
-                                       HorizontalAlignment="Right"/>
+							<TextBlock x:Name="StockName"
+                                       Text="Apple Inc."
+                                       FontSize="13"
+                                       Foreground="#808080"/>
 
 						</StackPanel>
+
+
+						<TextBlock Grid.Column="1"
+                                   x:Name="StockPrice"
+                                   Text="--"
+                                   FontSize="24"
+                                   FontWeight="Bold"
+                                   HorizontalAlignment="Right"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,15,0"
+                                   Foreground="#4EC9B0"/>
 
 					</Grid>
 
 
-					<!-- Graph -->
+					<!-- GRAPH -->
 
 					<Border Grid.Row="1"
-                            Background="#1E1E1E"
-                            Margin="10"
-                            BorderBrush="#3E3E42"
-                            BorderThickness="1">
+        Margin="15"
+        Background="#1E1E1E"
+        BorderBrush="#3E3E42"
+        BorderThickness="1">
 
-						<Grid>
-
-							<!-- Grid lines -->
-
-							<Line StartPoint="0,80"
-                                  EndPoint="800,80"
-                                  Stroke="#2D2D30"/>
-
-							<Line StartPoint="0,160"
-                                  EndPoint="800,160"
-                                  Stroke="#2D2D30"/>
-
-							<Line StartPoint="0,240"
-                                  EndPoint="800,240"
-                                  Stroke="#2D2D30"/>
-
-
-							<!-- Price line -->
-
-							<Polyline Points="
-                                0,245
-                                40,235
-                                80,240
-                                120,215
-                                160,225
-                                200,190
-                                240,200
-                                280,165
-                                320,175
-                                360,145
-                                400,155
-                                440,125
-                                480,140
-                                520,105
-                                560,115
-                                600,90
-                                640,105
-                                680,70
-                                720,82
-                                760,55
-                                800,65"
-                                      Stroke="#4EC9B0"
-                                      StrokeThickness="2"/>
-
-
-							<!-- Current price -->
-
-							<Line StartPoint="0,65"
-                                  EndPoint="800,65"
-                                  Stroke="#569CD6"
-                                  StrokeDashArray="4,4"/>
-
-							<TextBlock Text="224.41"
-                                       Foreground="#569CD6"
-                                       HorizontalAlignment="Right"
-                                       VerticalAlignment="Top"
-                                       Margin="0,4,8,0"/>
-
-
-							<!-- Timeframe -->
-
-							<StackPanel Orientation="Horizontal"
-                                        HorizontalAlignment="Right"
-                                        VerticalAlignment="Bottom"
-                                        Margin="0,0,10,8">
-
-								<Button Content="1D"
-                                        Margin="2"/>
-
-								<Button Content="1W"
-                                        Margin="2"/>
-
-								<Button Content="1M"
-                                        Margin="2"/>
-
-								<Button Content="3M"
-                                        Margin="2"/>
-
-								<Button Content="1Y"
-                                        Margin="2"/>
-
-							</StackPanel>
-
-						</Grid>
+						<Panel x:Name="GraphPanel"
+							   Background="#1E1E1E"/>
 
 					</Border>
 
@@ -552,267 +180,116 @@
 			</Border>
 
 
-			<!-- ================================================= -->
-			<!-- MARKET DATA                                       -->
-			<!-- ================================================= -->
+			<!-- ========================= -->
+			<!-- MARKET DATA -->
+			<!-- ========================= -->
 
-			<Border Grid.Row="0"
-                    Grid.Column="2"
-                    Classes="panel">
+			<Border Grid.Column="2"
+                    Margin="0,10,10,10"
+                    Background="#252526"
+                    BorderBrush="#3E3E42"
+                    BorderThickness="1">
 
-				<Grid RowDefinitions="36,*">
+				<ScrollViewer>
 
-					<Border Classes="panelHeader">
+					<StackPanel Margin="15">
 
 						<TextBlock Text="MARKET DATA"
-                                   Classes="title"
-                                   VerticalAlignment="Center"
-                                   Margin="10,0"/>
-
-					</Border>
-
-
-					<Grid Grid.Row="1"
-                          Margin="12"
-                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
-
-						<Grid ColumnDefinitions="*,Auto">
-							<TextBlock Text="Open" Classes="muted"/>
-							<TextBlock Grid.Column="1"
-                                       Text="$218.72"/>
-						</Grid>
-
-						<Grid Grid.Row="1"
-                              ColumnDefinitions="*,Auto"
-                              Margin="0,9">
-							<TextBlock Text="High" Classes="muted"/>
-							<TextBlock Grid.Column="1"
-                                       Text="$226.91"
-                                       Classes="green"/>
-						</Grid>
-
-						<Grid Grid.Row="2"
-                              ColumnDefinitions="*,Auto"
-                              Margin="0,9">
-							<TextBlock Text="Low" Classes="muted"/>
-							<TextBlock Grid.Column="1"
-                                       Text="$216.40"
-                                       Classes="red"/>
-						</Grid>
-
-						<Grid Grid.Row="3"
-                              ColumnDefinitions="*,Auto"
-                              Margin="0,9">
-							<TextBlock Text="Volume" Classes="muted"/>
-							<TextBlock Grid.Column="1"
-                                       Text="124.8M"/>
-						</Grid>
-
-						<Grid Grid.Row="4"
-                              ColumnDefinitions="*,Auto"
-                              Margin="0,9">
-							<TextBlock Text="Market Cap" Classes="muted"/>
-							<TextBlock Grid.Column="1"
-                                       Text="$5.42T"/>
-						</Grid>
-
-						<Grid Grid.Row="5"
-                              ColumnDefinitions="*,Auto"
-                              Margin="0,9">
-							<TextBlock Text="P/E" Classes="muted"/>
-							<TextBlock Grid.Column="1"
-                                       Text="42.8"/>
-						</Grid>
-
-						<Grid Grid.Row="6"
-                              ColumnDefinitions="*,Auto"
-                              Margin="0,9">
-							<TextBlock Text="52W High" Classes="muted"/>
-							<TextBlock Grid.Column="1"
-                                       Text="$231.20"/>
-						</Grid>
-
-						<Grid Grid.Row="7"
-                              ColumnDefinitions="*,Auto"
-                              Margin="0,9">
-							<TextBlock Text="52W Low" Classes="muted"/>
-							<TextBlock Grid.Column="1"
-                                       Text="$108.13"/>
-						</Grid>
-
-						<Grid Grid.Row="8"
-                              ColumnDefinitions="*,Auto"
-                              Margin="0,9">
-							<TextBlock Text="Exchange" Classes="muted"/>
-							<TextBlock Grid.Column="1"
-                                       Text="NASDAQ"
-                                       Classes="blue"/>
-						</Grid>
-
-					</Grid>
-
-				</Grid>
-
-			</Border>
+                                   FontSize="16"
+                                   FontWeight="Bold"
+                                   Foreground="#D4D4D4"
+                                   Margin="0,0,0,20"/>
 
 
-			<!-- ================================================= -->
-			<!-- NEWS / CURRENT INFORMATION                         -->
-			<!-- ================================================= -->
+						<TextBlock Text="OPEN"
+                                   Foreground="#808080"/>
 
-			<Border Grid.Row="1"
-                    Grid.Column="1"
-                    Grid.ColumnSpan="2"
-                    Classes="panel">
-
-				<Grid RowDefinitions="36,*">
-
-					<Border Classes="panelHeader">
-
-						<Grid ColumnDefinitions="*,Auto">
-
-							<TextBlock Text="CURRENT INFORMATION"
-                                       Classes="title"
-                                       VerticalAlignment="Center"
-                                       Margin="10,0"/>
-
-							<TextBlock Grid.Column="1"
-                                       Text="LIVE NEWS"
-                                       Classes="green"
-                                       VerticalAlignment="Center"
-                                       Margin="10,0"/>
-
-						</Grid>
-
-					</Border>
+						<TextBlock x:Name="OpenText"
+                                   Text="--"
+                                   FontSize="18"
+                                   Foreground="#D4D4D4"
+                                   Margin="0,3,0,15"/>
 
 
-					<ScrollViewer Grid.Row="1"
-                                  VerticalScrollBarVisibility="Auto">
+						<TextBlock Text="HIGH"
+                                   Foreground="#808080"/>
 
-						<StackPanel Margin="10">
-
-							<Grid ColumnDefinitions="70,*,Auto"
-                                  Margin="0,5">
-
-								<TextBlock Text="21:43"
-                                           Classes="muted"/>
-
-								<StackPanel Grid.Column="1">
-									<TextBlock Text="NVIDIA"
-                                               Classes="blue"
-                                               FontWeight="Bold"/>
-									<TextBlock Text="Latest company and market developments..."
-                                               TextWrapping="Wrap"/>
-								</StackPanel>
-
-								<TextBlock Grid.Column="2"
-                                           Text="●"
-                                           Classes="green"/>
-
-							</Grid>
+						<TextBlock x:Name="HighText"
+                                   Text="--"
+                                   FontSize="18"
+                                   Foreground="#4EC9B0"
+                                   Margin="0,3,0,15"/>
 
 
-							<Grid ColumnDefinitions="70,*,Auto"
-                                  Margin="0,10">
+						<TextBlock Text="LOW"
+                                   Foreground="#808080"/>
 
-								<TextBlock Text="21:31"
-                                           Classes="muted"/>
-
-								<StackPanel Grid.Column="1">
-									<TextBlock Text="MARKET"
-                                               Classes="blue"
-                                               FontWeight="Bold"/>
-									<TextBlock Text="Latest market-moving information and headlines..."
-                                               TextWrapping="Wrap"/>
-								</StackPanel>
-
-								<TextBlock Grid.Column="2"
-                                           Text="●"
-                                           Classes="green"/>
-
-							</Grid>
+						<TextBlock x:Name="LowText"
+                                   Text="--"
+                                   FontSize="18"
+                                   Foreground="#F44747"
+                                   Margin="0,3,0,15"/>
 
 
-							<Grid ColumnDefinitions="70,*,Auto"
-                                  Margin="0,10">
+						<TextBlock Text="PREVIOUS CLOSE"
+                                   Foreground="#808080"/>
 
-								<TextBlock Text="21:18"
-                                           Classes="muted"/>
-
-								<StackPanel Grid.Column="1">
-									<TextBlock Text="SECTOR"
-                                               Classes="blue"
-                                               FontWeight="Bold"/>
-									<TextBlock Text="Technology sector developments and analyst commentary..."
-                                               TextWrapping="Wrap"/>
-								</StackPanel>
-
-								<TextBlock Grid.Column="2"
-                                           Text="●"
-                                           Classes="green"/>
-
-							</Grid>
+						<TextBlock x:Name="PreviousCloseText"
+                                   Text="--"
+                                   FontSize="18"
+                                   Foreground="#D4D4D4"
+                                   Margin="0,3,0,15"/>
 
 
-							<Grid ColumnDefinitions="70,*,Auto"
-                                  Margin="0,10">
+						<TextBlock Text="VOLUME"
+                                   Foreground="#808080"/>
 
-								<TextBlock Text="20:57"
-                                           Classes="muted"/>
+						<TextBlock x:Name="VolumeText"
+                                   Text="--"
+                                   FontSize="18"
+                                   Foreground="#D4D4D4"
+                                   Margin="0,3,0,15"/>
 
-								<StackPanel Grid.Column="1">
-									<TextBlock Text="GLOBAL"
-                                               Classes="blue"
-                                               FontWeight="Bold"/>
-									<TextBlock Text="International market news relevant to the selected security..."
-                                               TextWrapping="Wrap"/>
-								</StackPanel>
 
-								<TextBlock Grid.Column="2"
-                                           Text="●"
-                                           Classes="green"/>
+						<TextBlock Text="CHANGE"
+                                   Foreground="#808080"/>
 
-							</Grid>
+						<TextBlock x:Name="ChangeText"
+                                   Text="--"
+                                   FontSize="18"
+                                   Foreground="#4EC9B0"
+                                   Margin="0,3,0,15"/>
 
-						</StackPanel>
 
-					</ScrollViewer>
+						<TextBlock Text="CHANGE %"
+                                   Foreground="#808080"/>
 
-				</Grid>
+						<TextBlock x:Name="ChangePercentText"
+                                   Text="--"
+                                   FontSize="18"
+                                   Foreground="#4EC9B0"/>
+
+					</StackPanel>
+
+				</ScrollViewer>
 
 			</Border>
 
 		</Grid>
 
 
-		<!-- ================================================= -->
-		<!-- STATUS BAR                                        -->
-		<!-- ================================================= -->
+		<!-- ========================= -->
+		<!-- STATUS BAR -->
+		<!-- ========================= -->
 
-		<Border Grid.Row="3"
+		<Border Grid.Row="2"
                 Background="#007ACC">
 
-			<Grid ColumnDefinitions="*,Auto,Auto">
-
-				<TextBlock Text="Riddy Tracker"
-                           Foreground="#FFFFFF"
-                           VerticalAlignment="Center"
-                           Margin="8,0"/>
-
-				<TextBlock Grid.Column="1"
-                           Text="MARKET DATA: CONNECTED"
-                           Foreground="#FFFFFF"
-                           VerticalAlignment="Center"
-                           Margin="15,0"/>
-
-				<TextBlock Grid.Column="2"
-                           Text="NEWS: CONNECTED"
-                           Foreground="#FFFFFF"
-                           VerticalAlignment="Center"
-                           Margin="15,0,10,0"/>
-
-			</Grid>
+			<TextBlock x:Name="StatusText"
+                       Text="Starting Riddy Tracker..."
+                       Foreground="White"
+                       VerticalAlignment="Center"
+                       Margin="10,0"/>
 
 		</Border>
 

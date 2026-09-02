@@ -1,340 +1,596 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Media;
+using DotNetEnv;
 using System;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Avalonia.Controls;
-using Avalonia.Interactivity;
 
-namespace sharesTracker
+namespace sharesTracker;
+
+public partial class MainWindow : Window
 {
-    public partial class MainWindow : Window, INotifyPropertyChanged
+    private readonly HttpClient _httpClient = new();
+
+    private readonly string _apiKey;
+
+    private List<double> _prices = new();
+
+
+    public MainWindow()
     {
-        private const string ApiKey = "YOUR_ALPHA_VANTAGE_API_KEY";
+        InitializeComponent();
 
-        private static readonly HttpClient Http = new HttpClient();
-
-        private string _selectedMarket = "NASDAQ";
-        private string _searchText = "";
-        private string _statusText = "Connecting...";
-
-        public ObservableCollection<Stock> TopStocks { get; } = new();
-
-        public string SelectedMarket
+        // Load .env — TraversePath() walks up from the current working
+        // directory (e.g. bin/Debug/net8.0) until it finds a .env file,
+        // instead of only checking the exe's output folder.
+        try
         {
-            get => _selectedMarket;
-            set
+            Env.TraversePath().Load();
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text =
+                $"ERROR: could not load .env ({ex.Message})";
+
+            return;
+        }
+
+        // Get Alpha Vantage API key
+        _apiKey =
+            Environment.GetEnvironmentVariable(
+                "ALPHA_VANTAGE_API_KEY")
+            ?? "";
+
+        if (string.IsNullOrWhiteSpace(_apiKey))
+        {
+            StatusText.Text =
+                "ERROR: ALPHA_VANTAGE_API_KEY not found in .env";
+
+            return;
+        }
+
+        StocksList.SelectedIndex = 0;
+
+        Loaded += async (_, _) =>
+        {
+            await LoadStockAsync("AAPL");
+        };
+
+        GraphPanel.SizeChanged += (_, _) =>
+        {
+            GraphPanel.InvalidateVisual();
+        };
+    }
+
+
+    // =========================================================
+    // WATCHLIST
+    // =========================================================
+
+    private async void Stock_Selected(
+        object? sender,
+        SelectionChangedEventArgs e)
+    {
+        if (StocksList.SelectedItem is ListBoxItem item)
+        {
+            string symbol =
+                item.Content?.ToString() ?? "";
+
+            if (!string.IsNullOrWhiteSpace(symbol))
             {
-                if (_selectedMarket == value)
-                    return;
-
-                _selectedMarket = value;
-                OnPropertyChanged(nameof(SelectedMarket));
-
-                _ = LoadMarketAsync();
+                await LoadStockAsync(symbol);
             }
         }
+    }
 
-        public string SearchText
+
+    // =========================================================
+    // SEARCH
+    // =========================================================
+
+    private async void Search_Click(
+        object? sender,
+        RoutedEventArgs e)
+    {
+        string symbol =
+            SearchBox.Text?.Trim().ToUpper() ?? "";
+
+        if (string.IsNullOrWhiteSpace(symbol))
         {
-            get => _searchText;
-            set
+            StatusText.Text =
+                "Enter a stock symbol.";
+
+            return;
+        }
+
+        await LoadStockAsync(symbol);
+    }
+
+
+    // =========================================================
+    // LOAD STOCK
+    // =========================================================
+
+    private async Task LoadStockAsync(
+        string symbol)
+    {
+        try
+        {
+            StatusText.Text =
+                $"Loading {symbol}...";
+
+
+            // =================================================
+            // CURRENT QUOTE
+            // =================================================
+
+            string quoteUrl =
+                "https://www.alphavantage.co/query" +
+                "?function=GLOBAL_QUOTE" +
+                $"&symbol={Uri.EscapeDataString(symbol)}" +
+                $"&apikey={_apiKey}";
+
+
+            string quoteJson =
+                await _httpClient.GetStringAsync(
+                    quoteUrl);
+
+
+            using JsonDocument quoteDocument =
+                JsonDocument.Parse(quoteJson);
+
+
+            if (!quoteDocument.RootElement.TryGetProperty(
+                    "Global Quote",
+                    out JsonElement quote))
             {
-                if (_searchText == value)
-                    return;
+                StatusText.Text =
+                    "No quote data returned.";
 
-                _searchText = value;
-                OnPropertyChanged(nameof(SearchText));
-            }
-        }
-
-        public string StatusText
-        {
-            get => _statusText;
-            set
-            {
-                if (_statusText == value)
-                    return;
-
-                _statusText = value;
-                OnPropertyChanged(nameof(StatusText));
-            }
-        }
-
-        public MainWindow()
-        {
-            InitializeComponent();
-
-            DataContext = this;
-
-            _ = LoadMarketAsync();
-        }
-
-
-        // =====================================================
-        // LOAD TOP 10 FOR CURRENT MARKET
-        // =====================================================
-
-        private async Task LoadMarketAsync()
-        {
-            try
-            {
-                StatusText = $"Loading {SelectedMarket}...";
-
-                TopStocks.Clear();
-
-                /*
-                 * Alpha Vantage's LISTING_STATUS endpoint gives us
-                 * the current list of securities.
-                 *
-                 * We filter it by exchange and then request quotes
-                 * for the securities we want to display.
-                 */
-
-                string url =
-                    $"https://www.alphavantage.co/query" +
-                    $"?function=LISTING_STATUS" +
-                    $"&apikey={ApiKey}";
-
-                using var response = await Http.GetAsync(url);
-
-                response.EnsureSuccessStatusCode();
-
-                string csv = await response.Content.ReadAsStringAsync();
-
-                var listings = ParseListingStatus(csv);
-
-                foreach (var listing in listings)
-                {
-                    if (!MatchesMarket(listing.Exchange))
-                        continue;
-
-                    /*
-                     * We deliberately don't hard-code companies.
-                     * The ticker/company/exchange information comes
-                     * from Alpha Vantage.
-                     */
-
-                    TopStocks.Add(new Stock
-                    {
-                        Symbol = listing.Symbol,
-                        Name = listing.Name,
-                        Exchange = listing.Exchange
-                    });
-
-                    if (TopStocks.Count >= 10)
-                        break;
-                }
-
-                StatusText =
-                    $"{TopStocks.Count} securities loaded · {SelectedMarket}";
-            }
-            catch (Exception ex)
-            {
-                StatusText = $"API error: {ex.Message}";
-            }
-        }
-
-
-        // =====================================================
-        // MARKET FILTER
-        // =====================================================
-
-        private bool MatchesMarket(string exchange)
-        {
-            if (string.IsNullOrWhiteSpace(exchange))
-                return false;
-
-            exchange = exchange.ToUpperInvariant();
-
-            return SelectedMarket switch
-            {
-                "NASDAQ" =>
-                    exchange.Contains("NASDAQ"),
-
-                "NYSE" =>
-                    exchange.Contains("NYSE"),
-
-                "LSE" =>
-                    exchange.Contains("LONDON"),
-
-                _ => true
-            };
-        }
-
-
-        // =====================================================
-        // PARSE ALPHA VANTAGE LISTING_STATUS CSV
-        // =====================================================
-
-        private static ObservableCollection<Listing> ParseListingStatus(
-            string csv)
-        {
-            var results = new ObservableCollection<Listing>();
-
-            string[] lines = csv.Split(
-                '\n',
-                StringSplitOptions.RemoveEmptyEntries);
-
-            if (lines.Length <= 1)
-                return results;
-
-            for (int i = 1; i < lines.Length; i++)
-            {
-                string line = lines[i].Trim();
-
-                if (string.IsNullOrWhiteSpace(line))
-                    continue;
-
-                string[] columns = SplitCsvLine(line);
-
-                if (columns.Length < 4)
-                    continue;
-
-                results.Add(new Listing
-                {
-                    Symbol = columns[0],
-                    Name = columns[1],
-                    Exchange = columns[2],
-                    AssetType = columns[3]
-                });
-            }
-
-            return results;
-        }
-
-
-        // =====================================================
-        // BASIC CSV PARSER
-        // =====================================================
-
-        private static string[] SplitCsvLine(string line)
-        {
-            return line.Split(',');
-        }
-
-
-        // =====================================================
-        // SEARCH
-        // =====================================================
-
-        private async void SearchButton_Click(
-            object? sender,
-            RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(SearchText))
                 return;
-
-            try
-            {
-                StatusText = $"Searching for {SearchText}...";
-
-                string url =
-                    $"https://www.alphavantage.co/query" +
-                    $"?function=SYMBOL_SEARCH" +
-                    $"&keywords={Uri.EscapeDataString(SearchText)}" +
-                    $"&apikey={ApiKey}";
-
-                using var response = await Http.GetAsync(url);
-
-                response.EnsureSuccessStatusCode();
-
-                string json = await response.Content.ReadAsStringAsync();
-
-                using JsonDocument document =
-                    JsonDocument.Parse(json);
-
-                if (!document.RootElement.TryGetProperty(
-                        "bestMatches",
-                        out JsonElement matches))
-                {
-                    StatusText = "No results found.";
-                    return;
-                }
-
-                if (matches.GetArrayLength() == 0)
-                {
-                    StatusText = "No results found.";
-                    return;
-                }
-
-                JsonElement first = matches[0];
-
-                string symbol =
-                    first.GetProperty("1. symbol").GetString() ?? "";
-
-                string name =
-                    first.GetProperty("2. name").GetString() ?? "";
-
-                string type =
-                    first.GetProperty("3. type").GetString() ?? "";
-
-                string region =
-                    first.GetProperty("4. region").GetString() ?? "";
-
-                StatusText =
-                    $"{symbol} · {name} · {region}";
-
-                /*
-                 * This is where we will later update:
-                 *
-                 * - Graph
-                 * - Current price
-                 * - Market data
-                 * - News
-                 *
-                 * using the returned ticker.
-                 */
             }
-            catch (Exception ex)
+
+
+            // =================================================
+            // READ QUOTE
+            // =================================================
+
+            string price =
+                GetValue(
+                    quote,
+                    "05. price");
+
+            string open =
+                GetValue(
+                    quote,
+                    "02. open");
+
+            string high =
+                GetValue(
+                    quote,
+                    "03. high");
+
+            string low =
+                GetValue(
+                    quote,
+                    "04. low");
+
+            string previousClose =
+                GetValue(
+                    quote,
+                    "08. previous close");
+
+            string volume =
+                GetValue(
+                    quote,
+                    "06. volume");
+
+            string change =
+                GetValue(
+                    quote,
+                    "09. change");
+
+            string changePercent =
+                GetValue(
+                    quote,
+                    "10. change percent");
+
+
+            // =================================================
+            // UPDATE UI
+            // =================================================
+
+            StockSymbol.Text =
+                symbol;
+
+            StockName.Text =
+                symbol;
+
+            StockPrice.Text =
+                FormatPrice(price);
+
+            OpenText.Text =
+                FormatPrice(open);
+
+            HighText.Text =
+                FormatPrice(high);
+
+            LowText.Text =
+                FormatPrice(low);
+
+            PreviousCloseText.Text =
+                FormatPrice(previousClose);
+
+            VolumeText.Text =
+                volume;
+
+            ChangeText.Text =
+                change;
+
+            ChangePercentText.Text =
+                changePercent;
+
+
+            // =================================================
+            // PRICE COLOUR
+            // =================================================
+
+            bool negative =
+                change.Trim().StartsWith("-");
+
+
+            IBrush priceColour;
+
+            if (negative)
             {
-                StatusText = $"Search error: {ex.Message}";
+                priceColour =
+                    new SolidColorBrush(
+                        Color.Parse("#F44747"));
             }
+            else
+            {
+                priceColour =
+                    new SolidColorBrush(
+                        Color.Parse("#4EC9B0"));
+            }
+
+
+            StockPrice.Foreground =
+                priceColour;
+
+            ChangeText.Foreground =
+                priceColour;
+
+            ChangePercentText.Foreground =
+                priceColour;
+
+
+            // =================================================
+            // LOAD GRAPH
+            // =================================================
+
+            await LoadGraphAsync(symbol);
+
+
+            StatusText.Text =
+                $"{symbol} loaded successfully";
         }
-
-
-        // =====================================================
-        // PROPERTY CHANGED
-        // =====================================================
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        private void OnPropertyChanged(string propertyName)
+        catch (Exception ex)
         {
-            PropertyChanged?.Invoke(
-                this,
-                new PropertyChangedEventArgs(propertyName));
+            StatusText.Text =
+                $"Error: {ex.Message}";
         }
     }
 
 
     // =========================================================
-    // STOCK
+    // LOAD HISTORICAL DATA
     // =========================================================
 
-    public class Stock
+    private async Task LoadGraphAsync(
+        string symbol)
     {
-        public string Symbol { get; set; } = "";
-        public string Name { get; set; } = "";
-        public string Exchange { get; set; } = "";
+        string url =
+            "https://www.alphavantage.co/query" +
+            "?function=TIME_SERIES_DAILY" +
+            $"&symbol={Uri.EscapeDataString(symbol)}" +
+            "&outputsize=compact" +
+            $"&apikey={_apiKey}";
 
-        public string Price { get; set; } = "—";
-        public string Change { get; set; } = "—";
-        public string ChangePercent { get; set; } = "—";
+
+        string json =
+            await _httpClient.GetStringAsync(url);
+
+
+        using JsonDocument document =
+            JsonDocument.Parse(json);
+
+
+        // API error
+        if (document.RootElement.TryGetProperty(
+                "Error Message",
+                out _))
+        {
+            StatusText.Text =
+                "Historical data unavailable.";
+
+            return;
+        }
+
+
+        // API rate limit
+        if (document.RootElement.TryGetProperty(
+                "Note",
+                out JsonElement note))
+        {
+            StatusText.Text =
+                note.GetString() ??
+                "Alpha Vantage request limit reached.";
+
+            return;
+        }
+
+
+        if (!document.RootElement.TryGetProperty(
+                "Time Series (Daily)",
+                out JsonElement timeSeries))
+        {
+            StatusText.Text =
+                "No historical data returned.";
+
+            return;
+        }
+
+
+        _prices.Clear();
+
+
+        // =================================================
+        // GET CLOSING PRICES
+        // =================================================
+
+        foreach (JsonProperty day
+                 in timeSeries.EnumerateObject())
+        {
+            if (day.Value.TryGetProperty(
+                    "4. close",
+                    out JsonElement close))
+            {
+                string? value =
+                    close.GetString();
+
+
+                if (double.TryParse(
+                        value,
+                        NumberStyles.Any,
+                        CultureInfo.InvariantCulture,
+                        out double parsedPrice))
+                {
+                    _prices.Add(parsedPrice);
+                }
+            }
+        }
+
+
+        // Newest → oldest from API.
+        // Reverse to oldest → newest.
+        _prices =
+            _prices
+                .Take(60)
+                .Reverse()
+                .ToList();
+
+
+        if (_prices.Count < 2)
+        {
+            StatusText.Text =
+                "Not enough data to draw graph.";
+
+            return;
+        }
+
+
+        // Tell Avalonia to redraw
+        GraphPanel.InvalidateVisual();
     }
 
 
     // =========================================================
-    // LISTING
+    // GRAPH
     // =========================================================
 
-    public class Listing
+    private void DrawGraph(
+        DrawingContext context)
     {
-        public string Symbol { get; set; } = "";
-        public string Name { get; set; } = "";
-        public string Exchange { get; set; } = "";
-        public string AssetType { get; set; } = "";
+        if (_prices.Count < 2)
+            return;
+
+
+        double width =
+            GraphPanel.Bounds.Width;
+
+
+        double height =
+            GraphPanel.Bounds.Height;
+
+
+        if (width <= 10 ||
+            height <= 10)
+        {
+            return;
+        }
+
+
+        double padding = 25;
+
+
+        double graphWidth =
+            width - padding * 2;
+
+
+        double graphHeight =
+            height - padding * 2;
+
+
+        double min =
+            _prices.Min();
+
+
+        double max =
+            _prices.Max();
+
+
+        double range =
+            max - min;
+
+
+        if (range <= 0)
+            range = 1;
+
+
+        // =================================================
+        // GRID
+        // =================================================
+
+        var gridPen =
+            new Pen(
+                new SolidColorBrush(
+                    Color.Parse("#2D2D30")),
+                1);
+
+
+        for (int i = 0; i <= 4; i++)
+        {
+            double y =
+                padding +
+                (i * graphHeight / 4);
+
+
+            context.DrawLine(
+                gridPen,
+                new Point(
+                    padding,
+                    y),
+                new Point(
+                    width - padding,
+                    y));
+        }
+
+
+        // =================================================
+        // PRICE LINE
+        // =================================================
+
+        var graphPen =
+            new Pen(
+                new SolidColorBrush(
+                    Color.Parse("#4EC9B0")),
+                2);
+
+
+        for (int i = 0;
+             i < _prices.Count - 1;
+             i++)
+        {
+            double x1 =
+                padding +
+                i *
+                graphWidth /
+                (_prices.Count - 1);
+
+
+            double x2 =
+                padding +
+                (i + 1) *
+                graphWidth /
+                (_prices.Count - 1);
+
+
+            double y1 =
+                padding +
+                graphHeight -
+                (
+                    (_prices[i] - min)
+                    / range
+                    * graphHeight
+                );
+
+
+            double y2 =
+                padding +
+                graphHeight -
+                (
+                    (_prices[i + 1] - min)
+                    / range
+                    * graphHeight
+                );
+
+
+            context.DrawLine(
+                graphPen,
+                new Point(x1, y1),
+                new Point(x2, y2));
+        }
+    }
+
+
+    // =========================================================
+    // AVALONIA RENDERING
+    // =========================================================
+
+    private void GraphPanel_Render(
+        object? sender,
+        DrawingContext context)
+    {
+        DrawGraph(context);
+    }
+
+
+    // =========================================================
+    // JSON HELPER
+    // =========================================================
+
+    private static string GetValue(
+        JsonElement element,
+        string property)
+    {
+        if (element.TryGetProperty(
+                property,
+                out JsonElement value))
+        {
+            return value.GetString() ?? "--";
+        }
+
+
+        return "--";
+    }
+
+
+    // =========================================================
+    // PRICE FORMAT
+    // =========================================================
+
+    private static string FormatPrice(
+        string value)
+    {
+        if (double.TryParse(
+                value,
+                NumberStyles.Any,
+                CultureInfo.InvariantCulture,
+                out double number))
+        {
+            return number.ToString(
+                "0.00",
+                CultureInfo.InvariantCulture);
+        }
+
+
+        return value;
     }
 }
-
