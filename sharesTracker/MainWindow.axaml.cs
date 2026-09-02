@@ -20,7 +20,7 @@ namespace sharesTracker
                 {
                     Content = new TextBlock
                     {
-                        Text = "Button pressed!",
+                        Text = "Testing worked",
                         Margin = new Avalonia.Thickness(10)
                     }
                 };
