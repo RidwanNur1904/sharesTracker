@@ -807,4 +807,9 @@ public partial class MainWindow : Window
 
         return 0;
     }
+
+    private void SupplyChain_Click(object? sender, RoutedEventArgs e)
+    {
+        // Add your Supply Chain functionality here
+    }
 }
