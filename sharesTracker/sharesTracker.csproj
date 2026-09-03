@@ -27,4 +27,9 @@
       <DependentUpon>SupplyChain.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
+	<ItemGroup>
+		<None Update="sectivia-supply-chain.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 </Project>

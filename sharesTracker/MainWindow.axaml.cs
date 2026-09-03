@@ -886,9 +886,20 @@ public partial class MainWindow : Window
         return 0;
     }
 
-    private void SupplyChain_Click(object? sender, RoutedEventArgs e)
-    {
-        var supplyChainWindow = new SupplyChain();
-        supplyChainWindow.Show();
-    }
+   
+        private void SupplyChain_Click(object? sender, RoutedEventArgs e)
+            {
+                // Get the stock currently displayed on the MainWindow
+                string symbol = StockSymbol.Text?.Trim() ?? "";
+                string companyName = StockName.Text?.Trim() ?? "";
+
+                // Open SupplyChain using the current stock
+                var supplyChainWindow = new SupplyChain(
+                    symbol,
+                    companyName);
+
+                supplyChainWindow.Show();
+            }
+
+
 }
