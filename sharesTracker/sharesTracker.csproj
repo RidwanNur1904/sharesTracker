@@ -19,5 +19,6 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="DotNetEnv" Version="3.2.0" />
+    <PackageReference Include="YahooFinanceApiNext" Version="2.3.11" />
   </ItemGroup>
 </Project>
