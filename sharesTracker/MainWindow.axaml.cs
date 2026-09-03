@@ -238,27 +238,72 @@ public partial class MainWindow : Window
 
 
     // =========================================================
-    // SEARCH
+    // SEARCH WITH AUTO-RESOLVE FOR INTERNATIONAL TICKERS
     // =========================================================
 
     private async void Search_Click(
         object? sender,
         RoutedEventArgs e)
     {
-        string symbol =
+        string input =
             SearchBox.Text?
                 .Trim()
                 .ToUpperInvariant() ?? "";
 
-        if (string.IsNullOrWhiteSpace(symbol))
+        if (string.IsNullOrWhiteSpace(input))
         {
             StatusText.Text =
-                "Enter a stock symbol.";
+                "Enter a stock symbol or company name.";
 
             return;
         }
 
-        await LoadStockAsync(symbol);
+        // Try resolving symbol/company query via Yahoo Search API first
+        string resolvedSymbol = await ResolveSymbolAsync(input);
+
+        await LoadStockAsync(resolvedSymbol);
+    }
+
+    /// <summary>
+    /// Queries Yahoo Finance Search API to map raw inputs or non-US tickers to their proper exchange ticker.
+    /// Example: "LLOY" -> "LLOY.L"
+    /// </summary>
+    private async Task<string> ResolveSymbolAsync(string input)
+    {
+        try
+        {
+            string searchUrl = $"https://query2.finance.yahoo.com/v1/finance/search?q={Uri.EscapeDataString(input)}&quotesCount=1&newsCount=0";
+
+            using HttpResponseMessage response = await _httpClient.GetAsync(searchUrl);
+            if (!response.IsSuccessStatusCode)
+            {
+                return input;
+            }
+
+            string json = await response.Content.ReadAsStringAsync();
+            using JsonDocument doc = JsonDocument.Parse(json);
+
+            if (doc.RootElement.TryGetProperty("quotes", out JsonElement quotes) &&
+                quotes.ValueKind == JsonValueKind.Array &&
+                quotes.GetArrayLength() > 0)
+            {
+                JsonElement firstQuote = quotes[0];
+                if (firstQuote.TryGetProperty("symbol", out JsonElement symbolElem))
+                {
+                    string? matchedSymbol = symbolElem.GetString();
+                    if (!string.IsNullOrWhiteSpace(matchedSymbol))
+                    {
+                        return matchedSymbol;
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Fall back to original input if search API query fails
+        }
+
+        return input;
     }
 
 
@@ -293,12 +338,45 @@ public partial class MainWindow : Window
                         Field.RegularMarketChangePercent)
                     .QueryAsync();
 
-            if (!securities.TryGetValue(
-                    symbol,
-                    out Security? stock))
+            Security? stock = null;
+            bool foundQuote = securities.TryGetValue(symbol, out stock) &&
+                              GetDecimal(stock, Field.RegularMarketPrice) != null;
+
+            // Fallback for raw UK tickers: if symbol has no extension and wasn't found, try appending ".L"
+            if (!foundQuote && !symbol.Contains('.'))
+            {
+                string ukSymbol = $"{symbol}.L";
+                StatusText.Text = $"Checking LSE exchange ({ukSymbol})...";
+
+                var ukSecurities = await Yahoo
+                    .Symbols(ukSymbol)
+                    .Fields(
+                        Field.Symbol,
+                        Field.LongName,
+                        Field.ShortName,
+                        Field.Currency,
+                        Field.RegularMarketPrice,
+                        Field.RegularMarketOpen,
+                        Field.RegularMarketDayHigh,
+                        Field.RegularMarketDayLow,
+                        Field.RegularMarketPreviousClose,
+                        Field.RegularMarketVolume,
+                        Field.RegularMarketChange,
+                        Field.RegularMarketChangePercent)
+                    .QueryAsync();
+
+                if (ukSecurities.TryGetValue(ukSymbol, out stock) &&
+                    GetDecimal(stock, Field.RegularMarketPrice) != null)
+                {
+                    symbol = ukSymbol;
+                    foundQuote = true;
+                }
+            }
+
+            if (!foundQuote || stock == null)
             {
                 StatusText.Text =
-                    $"No quote data found for {symbol}.";
+                    $"No quote data found for {symbol}. Try adding exchange suffix (e.g., {symbol}.L for LSE).";
 
                 return;
             }
@@ -810,6 +888,7 @@ public partial class MainWindow : Window
 
     private void SupplyChain_Click(object? sender, RoutedEventArgs e)
     {
-        // Add your Supply Chain functionality here
+        var supplyChainWindow = new SupplyChain();
+        supplyChainWindow.Show();
     }
 }

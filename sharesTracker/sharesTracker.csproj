@@ -21,4 +21,10 @@
     <PackageReference Include="DotNetEnv" Version="3.2.0" />
     <PackageReference Include="YahooFinanceApiNext" Version="2.3.11" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="SupplyChain.axaml.cs">
+      <DependentUpon>SupplyChain.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
 </Project>
